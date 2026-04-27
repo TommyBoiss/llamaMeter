@@ -74,7 +74,7 @@ def build_table(
     table.add_column("Context", justify="right", style="yellow")
     table.add_column("Quant", style="magenta")
     table.add_column("Capabilities", style="white")
-    table.add_column("Smell", justify="right", style="bright_magenta")
+    table.add_column("Sense of Smell", justify="right", style="bright_magenta")
     if show_ttft:
         if verbose:
             for i in range(1, num_runs + 1):
