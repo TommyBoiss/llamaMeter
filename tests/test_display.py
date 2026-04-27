@@ -92,9 +92,18 @@ class TestFormatFloatOrNa:
 
 
 class TestRandomSmellScore:
-    def test_random_percent(self):
-        with patch("ometer.display.random.randint", return_value=73):
-            assert random_smell_score() == "73%"
+    def test_deterministic_per_model(self):
+        assert random_smell_score("llama3") == random_smell_score("llama3")
+
+    def test_range_min_boundary(self):
+        with patch("ometer.display.random.Random") as random_cls:
+            random_cls.return_value.randint.return_value = 0
+            assert random_smell_score("llama3") == "0%"
+
+    def test_range_max_boundary(self):
+        with patch("ometer.display.random.Random") as random_cls:
+            random_cls.return_value.randint.return_value = 100
+            assert random_smell_score("llama3") == "100%"
 
 
 class TestParseValue:

@@ -61,8 +61,8 @@ def format_float_or_na(val: float | None) -> str:
     return f"{val:.2f}"
 
 
-def random_smell_score() -> str:
-    return f"{random.randint(0, 100)}%"
+def random_smell_score(model_name: str) -> str:
+    return f"{random.Random(model_name).randint(0, 100)}%"
 
 
 def build_table(
@@ -213,7 +213,7 @@ def process_single_model(
     context = str(extract_context_length(model_info))
     quant = details.get("quantization_level", "")
     caps = format_capabilities(capabilities) if capabilities else ""
-    smell = random_smell_score()
+    smell = random_smell_score(model_name)
 
     export_row = ExportRow(
         model=model_name,
