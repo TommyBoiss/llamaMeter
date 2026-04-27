@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 import re
 from typing import Any
 
@@ -60,6 +61,10 @@ def format_float_or_na(val: float | None) -> str:
     return f"{val:.2f}"
 
 
+def random_smell_score() -> str:
+    return f"{random.randint(0, 100)}%"
+
+
 def build_table(
     title: str, show_ttft: bool, show_tps: bool, verbose: bool, num_runs: int
 ) -> Table:
@@ -69,6 +74,7 @@ def build_table(
     table.add_column("Context", justify="right", style="yellow")
     table.add_column("Quant", style="magenta")
     table.add_column("Capabilities", style="white")
+    table.add_column("Smell", justify="right", style="bright_magenta")
     if show_ttft:
         if verbose:
             for i in range(1, num_runs + 1):
@@ -87,7 +93,7 @@ def _column_indices(
 ) -> tuple[list[int], list[int]]:
     ttft_indices: list[int] = []
     tps_indices: list[int] = []
-    idx = 5
+    idx = 6
     if show_ttft:
         if verbose:
             ttft_indices.extend(range(idx, idx + num_runs))
@@ -207,6 +213,7 @@ def process_single_model(
     context = str(extract_context_length(model_info))
     quant = details.get("quantization_level", "")
     caps = format_capabilities(capabilities) if capabilities else ""
+    smell = random_smell_score()
 
     export_row = ExportRow(
         model=model_name,
@@ -223,7 +230,7 @@ def process_single_model(
     if export_only:
         return [], export_row
 
-    row = [model_name, size, context, quant, caps]
+    row = [model_name, size, context, quant, caps, smell]
 
     runs = benchmark.runs
 

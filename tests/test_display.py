@@ -21,6 +21,7 @@ from ometer.display import (
     format_float_or_na,
     format_size,
     process_single_model,
+    random_smell_score,
     stream_table,
 )
 from ometer.export import ExportRow
@@ -88,6 +89,12 @@ class TestFormatFloatOrNa:
 
     def test_zero(self):
         assert format_float_or_na(0.0) == "0.00"
+
+
+class TestRandomSmellScore:
+    def test_random_percent(self):
+        with patch("ometer.display.random.randint", return_value=73):
+            assert random_smell_score() == "73%"
 
 
 class TestParseValue:
@@ -171,7 +178,7 @@ class TestColumnIndices:
         ttft_idx, tps_idx = _column_indices(
             show_ttft=True, show_tps=False, verbose=False, num_runs=3
         )
-        assert ttft_idx == [5]
+        assert ttft_idx == [6]
         assert tps_idx == []
 
     def test_tps_only(self):
@@ -179,28 +186,28 @@ class TestColumnIndices:
             show_ttft=False, show_tps=True, verbose=False, num_runs=3
         )
         assert ttft_idx == []
-        assert tps_idx == [5]
+        assert tps_idx == [6]
 
     def test_both(self):
         ttft_idx, tps_idx = _column_indices(
             show_ttft=True, show_tps=True, verbose=False, num_runs=3
         )
-        assert ttft_idx == [5]
-        assert tps_idx == [6]
+        assert ttft_idx == [6]
+        assert tps_idx == [7]
 
     def test_verbose_ttft(self):
         ttft_idx, tps_idx = _column_indices(
             show_ttft=True, show_tps=False, verbose=True, num_runs=2
         )
-        assert ttft_idx == [5, 6, 7]
+        assert ttft_idx == [6, 7, 8]
         assert tps_idx == []
 
     def test_verbose_both(self):
         ttft_idx, tps_idx = _column_indices(
             show_ttft=True, show_tps=True, verbose=True, num_runs=2
         )
-        assert ttft_idx == [5, 6, 7]
-        assert tps_idx == [8, 9, 10]
+        assert ttft_idx == [6, 7, 8]
+        assert tps_idx == [9, 10, 11]
 
     def test_neither(self):
         ttft_idx, tps_idx = _column_indices(
@@ -215,31 +222,31 @@ class TestBuildTable:
         table = build_table(
             "Test", show_ttft=False, show_tps=False, verbose=False, num_runs=3
         )
-        assert len(table.columns) == 5
+        assert len(table.columns) == 6
 
     def test_with_ttft(self):
         table = build_table(
             "Test", show_ttft=True, show_tps=False, verbose=False, num_runs=3
         )
-        assert len(table.columns) == 6
+        assert len(table.columns) == 7
 
     def test_with_tps(self):
         table = build_table(
             "Test", show_ttft=False, show_tps=True, verbose=False, num_runs=3
         )
-        assert len(table.columns) == 6
+        assert len(table.columns) == 7
 
     def test_with_both(self):
         table = build_table(
             "Test", show_ttft=True, show_tps=True, verbose=False, num_runs=3
         )
-        assert len(table.columns) == 7
+        assert len(table.columns) == 8
 
     def test_verbose_both(self):
         table = build_table(
             "Test", show_ttft=True, show_tps=True, verbose=True, num_runs=2
         )
-        assert len(table.columns) == 5 + 2 + 1 + 2 + 1
+        assert len(table.columns) == 6 + 2 + 1 + 2 + 1
 
 
 class TestProcessSingleModel:
@@ -275,6 +282,7 @@ class TestProcessSingleModel:
         assert row[2] == "8192"
         assert row[3] == "Q4_0"
         assert "completion" in row[4]
+        assert row[5].endswith("%")
         assert export_row.model == "llama3"
 
     def test_no_benchmark(self):
@@ -290,7 +298,8 @@ class TestProcessSingleModel:
             verbose=False,
             num_runs=3,
         )
-        assert row == ["llama3", "0B", "0", "", ""]
+        assert row[:5] == ["llama3", "0B", "0", "", ""]
+        assert row[5].endswith("%")
 
     def test_export_only_returns_empty_row(self):
         tag_model = {
@@ -386,7 +395,7 @@ class TestProcessSingleModelVerbose:
             verbose=True,
             num_runs=2,
         )
-        assert len(row) == 5 + 2 + 1 + 2 + 1
+        assert len(row) == 6 + 2 + 1 + 2 + 1
 
     def test_verbose_fewer_runs_than_num_runs(self):
         tag_model = {"name": "llama3", "details": {}}
@@ -409,7 +418,7 @@ class TestProcessSingleModelVerbose:
             num_runs=3,
         )
         assert "n/a" in row
-        assert len(row) == 5 + 3 + 1 + 3 + 1
+        assert len(row) == 6 + 3 + 1 + 3 + 1
 
 
 class TestBuildColoredTable:
@@ -423,6 +432,7 @@ class TestBuildColoredTable:
                     "4096",
                     "Q4_0",
                     "completion",
+                    "42%",
                     f"{1.0 + i:.2f}",
                     f"{30.0 + i:.2f}",
                 ]
@@ -451,14 +461,14 @@ class TestBuildColoredTable:
         assert table is not None
 
     def test_with_err_values(self):
-        rows = [["model", "7B", "4096", "Q4_0", "completion", "err", "err"]]
+        rows = [["model", "7B", "4096", "Q4_0", "completion", "42%", "err", "err"]]
         table = _build_colored_table(
             "Test", show_ttft=True, show_tps=True, verbose=False, num_runs=1, rows=rows
         )
         assert table is not None
 
     def test_with_na_values(self):
-        rows = [["model", "7B", "4096", "Q4_0", "completion", "n/a", "n/a"]]
+        rows = [["model", "7B", "4096", "Q4_0", "completion", "42%", "n/a", "n/a"]]
         table = _build_colored_table(
             "Test", show_ttft=True, show_tps=True, verbose=False, num_runs=1, rows=rows
         )
@@ -472,6 +482,7 @@ class TestBuildColoredTable:
                 "4096",
                 "Q4_0",
                 "completion",
+                "42%",
                 "1.00",
                 "2.00",
                 "1.50",
