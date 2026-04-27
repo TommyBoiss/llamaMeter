@@ -20,8 +20,8 @@ from ometer.display import (
     format_capabilities,
     format_float_or_na,
     format_size,
+    generate_smell_score,
     process_single_model,
-    random_smell_score,
     stream_table,
 )
 from ometer.export import ExportRow
@@ -91,19 +91,19 @@ class TestFormatFloatOrNa:
         assert format_float_or_na(0.0) == "0.00"
 
 
-class TestRandomSmellScore:
+class TestGenerateSmellScore:
     def test_deterministic_per_model(self):
-        assert random_smell_score("llama3") == random_smell_score("llama3")
+        assert generate_smell_score("llama3") == generate_smell_score("llama3")
 
     def test_range_min_boundary(self):
         with patch("ometer.display.random.Random") as random_cls:
             random_cls.return_value.randint.return_value = 0
-            assert random_smell_score("llama3") == "0%"
+            assert generate_smell_score("llama3") == "0%"
 
     def test_range_max_boundary(self):
         with patch("ometer.display.random.Random") as random_cls:
             random_cls.return_value.randint.return_value = 100
-            assert random_smell_score("llama3") == "100%"
+            assert generate_smell_score("llama3") == "100%"
 
 
 class TestParseValue:
